@@ -94,11 +94,8 @@ The ingestion process allows you to identify, download, clean, and merge Census 
 **Files and Scripts:**
 
 - `availableCensusDatasetsScraper.py` – Scrapes the Census 2011 and 2021 Data Finder websites to find datasets available at LSOA granularity. Outputs metadata CSVs: `datasets_lsoa_2011.csv` and `datasets_lsoa_2021.csv`.
-- `datasets_lsoa_2011.csv` – Contains metadata for all 2011 Census datasets at LSOA level.
-- `datasets_lsoa_2021.csv` – Contains metadata for all 2021 Census datasets at LSOA level.
-- `downloadCensusTable.ipynb` (or its Python equivalent) – Automates downloading, cleaning, and merging of selected datasets from the CSV lists. Key features:
+- `downloadCensusTable.ipynb` – Automates downloading, cleaning and merging of selected datasets. Key features:
   - Uses fuzzy matching to search for datasets of interest.
-  - Allows manual selection of datasets by ID.
   - Builds the correct NOMIS API URLs by checking if datasets support percentage measures and/or include rural/urban dimensions.
   - Downloads datasets and cleans column names to PascalCase, prefixed with dataset code.
   - Merges multiple datasets on `Geography` and `GeographyCode`.
@@ -107,14 +104,38 @@ The ingestion process allows you to identify, download, clean, and merge Census 
 **Usage Notes:**
 While the details above provide context, in practice you will primarily work with the `downloadCensusTable.ipynb` notebook. The typical workflow is as follows:
 
-1. **Browse datasets:** Use fuzzy search within the notebook to identify datasets containing covariates of interest.
+1. **Browse datasets:** Use fuzzy search within the notebook to identify datasets containing covariates of interest. 
+```python
+# Example covariates of interest
+interests = ['Hours worked', 'NS-SeC', 'Country of birth', 
+            'Health', 'Disability', 'Distance travelled to work', 'Migrant']
+
+datasets_2011 = browseDatasets(interests, availableDatasets_2011)
+datasets_2011
+```
 2. **Select datasets:** Manually choose dataset IDs from the search results and store them as a list. 
+```python
+# Datasets of interest
+dataset_ids_2011 = ['NM_611_1', 'NM_617_1', 'NM_625_1', 'NM_153_1', 'NM_559_1', 'NM_562_1', 'NM_933_1']
+
+# View and confirm needed datasets
+availableDatasets_2011[
+    availableDatasets_2011['dataset_id'].isin(dataset_ids_2011)
+]
+```
 3. **Download and clean:** Use the `NOMISDatasetManager` class to fetch the selected datasets. The class automatically:
+   - Reads in the existing dataset if `file_path` exists, otherwise it creates a new dataset at that location. 
    - Builds the correct NOMIS API URLs 
    - Downloads the dataset.
    - Cleans column names into PascalCase and prefixes them with the dataset code.
-4. **Merge datasets:** The class merges all selected datasets on LSOA to produce a single, comprehensive dataset per Census year.
-5. **Output:** The final merged datasets are ready-to-use LSOA-level covariate files for 2011 and 2021.
+   - Merges all selected datasets on LSOA to produce a single, comprehensive dataset per Census year.
+```python
+manager = NOMISDatasetManager()
+manager.mergeDatasetsByCodes(
+    dataset_ids_2011, 2011, file_path='census_data_2011_v2.csv', col_names_mapping_path='column_names_census_2011'
+)
+```
+4. **Output:** The final merged datasets are ready-to-use LSOA-level covariate files.
 
 **Additional Notes:** The method `NOMISDatasetManager.mergeDatasetsByCodes` can take an existing dataset via `file_path` and merge in new datasets. Any datasets already included in the existing file at `file_path` are automatically skipped to prevent duplication. The method can also build a new LSOA-level covariate dataset from scratch by passing in a non-existent `file_path`.
 
