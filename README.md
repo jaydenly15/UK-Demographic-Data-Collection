@@ -128,15 +128,14 @@ availableDatasets_2011[
    - Builds the correct NOMIS API URLs 
    - Downloads the dataset.
    - Cleans column names into PascalCase and prefixes them with the dataset code.
-   - Merges all selected datasets on LSOA to produce a single, comprehensive dataset per Census year.
+   - Merges all selected datasets on LSOA to produce a single LSOA-level dataset. The merged dataset is saved to `file_path`.
+   - You can also specify a `col_names_mapping_path` which stores the mapping between the cleaned and original column names, since the data cleaning changes the column names. 
 ```python
 manager = NOMISDatasetManager()
 manager.mergeDatasetsByCodes(
-    dataset_ids_2011, 2011, file_path='census_data_2011_v2.csv', col_names_mapping_path='column_names_census_2011'
+    dataset_ids_2011, 2011, file_path='census_data_2011.csv', col_names_mapping_path='column_names_census_2011'
 )
 ```
-4. **Output:** The final merged datasets are ready-to-use LSOA-level covariate files.
-
 **Additional Notes:** The method `NOMISDatasetManager.mergeDatasetsByCodes` can take an existing dataset via `file_path` and merge in new datasets. Any datasets already included in the existing file at `file_path` are automatically skipped to prevent duplication. The method can also build a new LSOA-level covariate dataset from scratch by passing in a non-existent `file_path`.
 
 **Sources:**
